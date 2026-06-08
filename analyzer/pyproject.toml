@@ -1,0 +1,14 @@
+[project]
+name = "biopac-analyzer"
+version = "0.1.0"
+description = "A simple web app for BIOPAC signal analysis and Kubios-style report generation"
+requires-python = ">=3.10"
+dependencies = [
+    "flask>=3.0.0",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "neurokit2>=0.2.7",
+    "scipy>=1.10.0",
+    "matplotlib>=3.7.0",
+    "flask-cors>=4.0.0"
+]
