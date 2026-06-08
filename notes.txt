@@ -2,3 +2,4 @@ A new assignment is you need to build a ui surface for biopac ,
 biopac can record ecg and other signal using csv file, and professor want a web or app can easily import csv files and have a report come out , let someone who don't know coding can quickly analysis their data
 
 I will deal with the python code ,  the code is designed to process data and calculate heart rate , Respiratory rate and other parameters, and your work is to develop a user-friendly interface where users can upload CSV files and generate reports automatically.  It's very similar to the MBTI website , users answer some questions, and the website generates the results.  Our answer is the csv files.
+
