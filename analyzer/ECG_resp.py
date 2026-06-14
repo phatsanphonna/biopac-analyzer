@@ -760,46 +760,47 @@ def process_and_plot_ecg(file_path, ecg_col="CH1", fs=250, edr_fs=8,
 # =========================
 # 批次執行
 # =========================
-final_results = []
-method_details = []
+if __name__ == "__main__":
+    final_results = []
+    method_details = []
 
-csv_files = glob.glob(os.path.join(FOLDER_PATH, "*.csv"))
+    csv_files = glob.glob(os.path.join(FOLDER_PATH, "*.csv"))
 
-if not csv_files:
-    print(f"在路徑 {FOLDER_PATH} 中找不到 CSV 檔案。")
+    if not csv_files:
+        print(f"在路徑 {FOLDER_PATH} 中找不到 CSV 檔案。")
 
-else:
-    for file_path in csv_files:
-        res = process_and_plot_ecg(
-            file_path,
-            ecg_col=ECG_COL,
-            fs=FS,
-            edr_fs=EDR_FS,
-            start_sec=START_SEC,
-            duration_sec=DURATION_SEC
-        )
+    else:
+        for file_path in csv_files:
+            res = process_and_plot_ecg(
+                file_path,
+                ecg_col=ECG_COL,
+                fs=FS,
+                edr_fs=EDR_FS,
+                start_sec=START_SEC,
+                duration_sec=DURATION_SEC
+            )
 
-        if res:
-            final_results.append(res["final"])
-            method_details.append(res["details"])
+            if res:
+                final_results.append(res["final"])
+                method_details.append(res["details"])
 
-    if final_results:
-        final_df = pd.DataFrame(final_results)
-        detail_df = pd.DataFrame(method_details)
+        if final_results:
+            final_df = pd.DataFrame(final_results)
+            detail_df = pd.DataFrame(method_details)
 
-        final_output_path = os.path.join(
-            FOLDER_PATH,
-            "final_respiration_results.csv"
-        )
+            final_output_path = os.path.join(
+                FOLDER_PATH,
+                "final_respiration_results.csv"
+            )
 
-        detail_output_path = os.path.join(
-            FOLDER_PATH,
-            "method_details_three_estimates.csv"
-        )
+            detail_output_path = os.path.join(
+                FOLDER_PATH,
+                "method_details_three_estimates.csv"
+            )
 
-        final_df.to_csv(final_output_path, index=False, encoding="utf-8-sig")
-        detail_df.to_csv(detail_output_path, index=False, encoding="utf-8-sig")
+            final_df.to_csv(final_output_path, index=False, encoding="utf-8-sig")
+            detail_df.to_csv(detail_output_path, index=False, encoding="utf-8-sig")
 
-        print("\n[完成] 所有檔案已處理完畢！")
-        print(f"最終結果 CSV 已儲存至: {final_output_path}")
-        print(f"三方法詳細紀錄 CSV 已儲存至: {detail_output_path}")
+            print("\n[完成] 所有檔案已處理完畢！")
+            print(f"最終結果 CSV 已儲存至: {final_output_path}")
+            print(f"三方法詳細紀錄 CSV 已儲存至: {detail_output_path}")
