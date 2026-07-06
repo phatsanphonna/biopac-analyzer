@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -15,6 +16,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   onLoadDemo,
   error,
 }) => {
+  const { t } = useTranslation();
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,19 +50,19 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     <div className="grid gap-8 md:grid-cols-2 items-center py-8">
       <div className="space-y-6">
         <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl text-foreground">
-          BIOPAC Signal Analyzer
+          {t("title")}
         </h1>
         <p className="text-muted-foreground text-lg leading-relaxed">
-          Import raw CSV signals recorded from BIOPAC units. The analyzer automatically cleans ECG/respiration tracks, identifies R-peaks, and generates an autonomic nervous system report.
+          {t("description")}
         </p>
         
         <div className="space-y-3">
-          <h3 className="font-semibold text-sm text-foreground">Format requirements:</h3>
+          <h3 className="font-semibold text-sm text-foreground">{t("formatRequirements")}</h3>
           <ul className="text-sm text-muted-foreground space-y-1.5 list-disc pl-5">
-            <li>CSV format with column names in the first row.</li>
-            <li>Needs a <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs text-foreground">sec</code> or <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs text-foreground">time</code> column.</li>
-            <li>ECG recording mapped to <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs text-foreground">CH1</code>.</li>
-            <li>(Optional) Respiration wave mapped to <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs text-foreground">CH2</code>.</li>
+            <li>{t("req1")}</li>
+            <li>{t("req2")}</li>
+            <li>{t("req3")}</li>
+            <li>{t("req4")}</li>
           </ul>
         </div>
       </div>
@@ -78,8 +80,8 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           onDrop={handleDrop}
         >
           <CardHeader>
-            <CardTitle>Import CSV Record</CardTitle>
-            <CardDescription>Select or drag a BIOPAC CSV file into this window</CardDescription>
+            <CardTitle>{t("importCSV")}</CardTitle>
+            <CardDescription>{t("dragDrop")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div 
@@ -88,8 +90,8 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
             >
               <UploadCloud className="size-12 text-muted-foreground/85 stroke-1" />
               <div className="space-y-1">
-                <p className="text-sm font-medium">Click to select files</p>
-                <p className="text-xs text-muted-foreground">CSV file format up to 20MB</p>
+                <p className="text-sm font-medium">{t("clickSelect")}</p>
+                <p className="text-xs text-muted-foreground">{t("maxSize")}</p>
               </div>
               <Input 
                 ref={fileInputRef}
@@ -110,10 +112,10 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           </CardContent>
           <CardFooter className="flex justify-between border-t border-border/50 pt-4">
             <Button variant="outline" onClick={onLoadDemo} className="w-full sm:w-auto">
-              Try Demo Signal
+              {t("tryDemo")}
             </Button>
             <Button onClick={() => fileInputRef.current?.click()} className="w-full sm:w-auto">
-              Select File
+              {t("selectFile")}
             </Button>
           </CardFooter>
         </Card>

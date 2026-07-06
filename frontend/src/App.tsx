@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import Navbar from "./components/react/navbar";
 import { FileUploader } from "./components/react/FileUploader";
 import { LoadingState } from "./components/react/LoadingState";
 import { ReportHeader } from "./components/react/ReportHeader";
@@ -12,6 +14,7 @@ import {
 import type { AnalysisResults } from "./lib/signalProcessor";
 
 function App() {
+  const { t } = useTranslation();
   const [results, setResults] = useState<AnalysisResults | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +46,7 @@ function App() {
       })
       .catch((err) => {
         console.warn(
-          "Python backend connection failed. Falling back to local JS processing.",
+          t("connectionFailed"),
           err,
         );
 
@@ -62,18 +65,18 @@ function App() {
                 console.error(localErr);
                 setError(
                   localErr.message ||
-                    "Failed to process the CSV file locally. Ensure columns 'sec' and 'CH1' exist.",
+                    t("csvError"),
                 );
                 setIsAnalyzing(false);
               }
             }, 100);
           } catch (readErr) {
-            setError("Failed to read the file locally.");
+            setError(t("readError"));
             setIsAnalyzing(false);
           }
         };
         reader.onerror = () => {
-          setError("File reading encountered an error.");
+          setError(t("fileReadError"));
           setIsAnalyzing(false);
         };
         reader.readAsText(file);
@@ -92,7 +95,7 @@ function App() {
         setResults(analysisResults);
         setIsAnalyzing(false);
       } catch (err) {
-        setError("Failed to generate demo data.");
+        setError(t("demoError"));
         setIsAnalyzing(false);
       }
     }, 300);
@@ -106,6 +109,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-muted/10 flex flex-col font-sans">
+      <Navbar />
       <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl flex flex-col justify-center">
         {isAnalyzing ? (
           <LoadingState />
