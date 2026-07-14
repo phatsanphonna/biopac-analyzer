@@ -4,10 +4,6 @@ import pandas as pd
 from scipy.signal import find_peaks, hilbert, welch, detrend
 from scipy.interpolate import interp1d
 
-import tkinter as tk
-from tkinter import filedialog, ttk, messagebox
-
-
 # ===========================================================
 # ECG / HRV
 # ===========================================================
@@ -520,6 +516,9 @@ class App:
 # ===========================================================
 
 if __name__ == "__main__":
+    import tkinter as tk
+    from tkinter import filedialog, messagebox, ttk
+
     root = tk.Tk()
     App(root)
     root.mainloop()

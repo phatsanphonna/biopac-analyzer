@@ -10,7 +10,6 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-import uvicorn
 import importlib.util
 import sys
 import os
@@ -472,4 +471,6 @@ async def serve_frontend(file_name: str) -> Any:
 
 
 if __name__ == "__main__":
+    import uvicorn
+
     uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
