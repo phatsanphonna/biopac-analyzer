@@ -14,20 +14,20 @@ import importlib.util
 import sys
 import os
 
-# Dynamically import "HRV 參數.py" due to spaces and Chinese characters in filename
+# Dynamically import the HRV analysis module.
 hrv_module: Optional[types.ModuleType] = None
 try:
     dir_path: str = os.path.dirname(os.path.abspath(__file__))
     spec = importlib.util.spec_from_file_location(
-        "hrv_module", os.path.join(dir_path, "HRV 參數.py")
+        "hrv_module", os.path.join(dir_path, "HRV_parameters.py")
     )
     if spec is not None and spec.loader is not None:
         hrv_module = importlib.util.module_from_spec(spec)
         sys.modules["hrv_module"] = hrv_module
         spec.loader.exec_module(hrv_module)
-        print("Successfully imported HRV 參數.py dynamically.")
+        print("Successfully imported HRV_parameters.py dynamically.")
 except Exception as e:
-    print(f"Failed to dynamically import HRV 參數.py: {e}")
+    print(f"Failed to dynamically import HRV_parameters.py: {e}")
 
 # Dynamically import "ECG_resp.py"
 ecg_resp_module: Optional[types.ModuleType] = None
@@ -147,7 +147,7 @@ async def analyze_file(file: UploadFile = File(...)) -> Dict[str, Any]:
         except Exception:
             ecg_clean = ecg_signal.copy()
 
-    # --- HRV and ECG R-Peak Detection (Calling HRV 參數.py directly) ---
+    # --- HRV and ECG R-Peak Detection (Calling HRV_parameters.py directly) ---
     peaks: List[int] = []
     avg_hr: float = 0.0
     mean_rr: float = 0.0

@@ -10,7 +10,7 @@ biopac-analyzer/
 ├── analyzer/                  # Python FastAPI Backend
 │   ├── server.py              # Main API server & Static file mounting
 │   ├── ECG_resp.py            # ECG-Derived Respiration (EDR) calculations
-│   ├── HRV 參數.py             # Custom HRV features parser (R-peak, time/freq metrics)
+│   ├── HRV_parameters.py       # Custom HRV features parser (R-peak, time/freq metrics)
 │   ├── RSA.py                 # Respiratory Sinus Arrhythmia coupling calculations
 │   ├── pyproject.toml         # Python project dependency configuration
 │   └── uv.lock                # Python lockfile

@@ -9,7 +9,7 @@ This document outlines workspace conventions, module definitions, styling polici
 - **`analyzer/` (Backend Service)**:
   - **`server.py`**: The primary FastAPI application. It is fully type-annotated (`mypy` compliant) and handles file validation, signal subsampling, and static asset serving. Keep imports clean and type annotations strict.
   - **`ECG_resp.py`**: ECG-Derived Respiration (EDR) calculations. Contains Welch PSD estimators and bandpass filters. Keep consensus calculations decoupled from router logic.
-  - **`HRV 參數.py`**: Core research script. **Do not rename this file** (other components rely on its specific name). It is dynamically loaded by `server.py` using `importlib` spec configurations.
+  - **`HRV_parameters.py`**: Core research script. It is dynamically loaded by `server.py` using `importlib` spec configurations.
   - **`RSA.py`**: Respiratory Sinus Arrhythmia calculations.
 
 - **`frontend/` (Client Interface)**:
