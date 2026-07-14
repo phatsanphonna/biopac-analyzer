@@ -14,20 +14,24 @@ import importlib.util
 import sys
 import os
 
-# Dynamically import the HRV analysis module.
+# NumPy 2.4 removed this alias, but the supplied HRV module still uses it.
+if not hasattr(np, "trapz"):
+    setattr(np, "trapz", np.trapezoid)
+
+# Dynamically import the Pan-Tompkins HRV analysis module.
 hrv_module: Optional[types.ModuleType] = None
 try:
     dir_path: str = os.path.dirname(os.path.abspath(__file__))
     spec = importlib.util.spec_from_file_location(
-        "hrv_module", os.path.join(dir_path, "HRV_parameters.py")
+        "hrv_module", os.path.join(dir_path, "ecg_hrv_pantompkins_gui.py")
     )
     if spec is not None and spec.loader is not None:
         hrv_module = importlib.util.module_from_spec(spec)
         sys.modules["hrv_module"] = hrv_module
         spec.loader.exec_module(hrv_module)
-        print("Successfully imported HRV_parameters.py dynamically.")
+        print("Successfully imported ecg_hrv_pantompkins_gui.py dynamically.")
 except Exception as e:
-    print(f"Failed to dynamically import HRV_parameters.py: {e}")
+    print(f"Failed to dynamically import ecg_hrv_pantompkins_gui.py: {e}")
 
 # Dynamically import "ECG_resp.py"
 ecg_resp_module: Optional[types.ModuleType] = None
@@ -163,7 +167,7 @@ async def analyze_file(file: Annotated[UploadFile, File()]) -> Dict[str, Any]:
         except Exception:
             ecg_clean = ecg_signal.copy()
 
-    # --- HRV and ECG R-Peak Detection (Calling HRV_parameters.py directly) ---
+    # --- HRV and ECG R-Peak Detection ---
     peaks: List[int] = []
     avg_hr: float = 0.0
     mean_rr: float = 0.0
@@ -193,7 +197,8 @@ async def analyze_file(file: Annotated[UploadFile, File()]) -> Dict[str, Any]:
             pnn50 = safe_float(feat.get("pNN50_percent"))
 
             # Detect R-peaks early so they are available for EDR respiration calculations
-            peaks_arr: np.ndarray = hrv_module.detect_r_peaks(ecg_signal, fs)
+            peaks_arr: np.ndarray
+            peaks_arr, _ = hrv_module.detect_r_peaks_pantompkins(ecg_clean, fs)
             peaks = [int(p) for p in peaks_arr]
 
             # Respiration Rate & RESP (Hz) using EDR consensus if CH2 is present
@@ -299,10 +304,10 @@ async def analyze_file(file: Annotated[UploadFile, File()]) -> Dict[str, Any]:
                         resp_hz = avg_resp_rate / 60.0
                     except Exception as e:
                         print(f"Failed to calculate EDR consensus: {e}")
-                        avg_resp_rate = safe_float(feat.get("EDR_rate_bpm"))
+                        avg_resp_rate = safe_float(feat.get("Exploratory_EDR_rate_bpm"))
                         resp_hz = avg_resp_rate / 60.0 if avg_resp_rate > 0 else 0.0
                 else:
-                    avg_resp_rate = safe_float(feat.get("EDR_rate_bpm"))
+                    avg_resp_rate = safe_float(feat.get("Exploratory_EDR_rate_bpm"))
                     resp_hz = avg_resp_rate / 60.0 if avg_resp_rate > 0 else 0.0
             else:
                 avg_resp_rate = 0.0
@@ -318,12 +323,12 @@ async def analyze_file(file: Annotated[UploadFile, File()]) -> Dict[str, Any]:
             # 2. Get peaks and RR series for plotting
             # Get filtered RR intervals to reconstruct instantaneous heart rate timeline
             rr: np.ndarray
-            r_times: np.ndarray
-            rr, r_times = hrv_module.compute_rr_intervals(peaks_arr, fs)
+            rr_times: np.ndarray
+            rr, _, rr_times = hrv_module.compute_rr_intervals(peaks_arr, fs)
             rr_valid: np.ndarray
             rr_times_valid: np.ndarray
             rr_valid, rr_times_valid, _ = hrv_module.filter_rr_intervals(
-                rr, r_times, min_rr=0.3, max_rr=2.0
+                rr, rr_times, min_rr=0.3, max_rr=2.0
             )
 
             for t_point, rr_val in zip(rr_times_valid, rr_valid):
