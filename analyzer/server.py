@@ -1,7 +1,8 @@
+import gzip
 import io
 import math
 import types
-from typing import Any, Dict, List, Optional, Set
+from typing import Annotated, Any, Dict, List, Optional, Set
 import numpy as np
 import pandas as pd
 import neurokit2 as nk
@@ -45,6 +46,7 @@ except Exception as e:
     print(f"Failed to dynamically import ECG_resp.py: {e}")
 
 app = FastAPI(title="BIOPAC Physiological Analysis Server")
+MAX_CSV_BYTES: int = 50 * 1024 * 1024
 
 # Enable CORS for frontend connectivity
 app.add_middleware(
@@ -66,15 +68,30 @@ def safe_float(val: Any) -> float:
         return 0.0
 
 
+def decode_csv_upload(contents: bytes, filename: str) -> bytes:
+    if filename.lower().endswith(".gz"):
+        try:
+            with gzip.GzipFile(fileobj=io.BytesIO(contents)) as compressed:
+                contents = compressed.read(MAX_CSV_BYTES + 1)
+        except (OSError, EOFError) as exc:
+            raise HTTPException(status_code=400, detail="Invalid gzip file.") from exc
+
+    if len(contents) > MAX_CSV_BYTES:
+        raise HTTPException(status_code=413, detail="Decompressed CSV is too large.")
+    return contents
+
+
 @app.post("/api/analyze")
-async def analyze_file(file: UploadFile = File(...)) -> Dict[str, Any]:
+async def analyze_file(file: Annotated[UploadFile, File()]) -> Dict[str, Any]:
     global hrv_module, ecg_resp_module
-    if not file.filename or not file.filename.endswith(".csv"):
-        raise HTTPException(status_code=400, detail="Only CSV files are supported.")
+    if not file.filename or not file.filename.lower().endswith((".csv", ".csv.gz")):
+        raise HTTPException(status_code=400, detail="Only CSV and CSV.GZ files are supported.")
 
     try:
-        contents: bytes = await file.read()
+        contents: bytes = decode_csv_upload(await file.read(), file.filename)
         df: pd.DataFrame = pd.read_csv(io.BytesIO(contents))
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to parse CSV: {str(e)}")
 

@@ -40,11 +40,11 @@ export const FrequencySummary: React.FC<FrequencySummaryProps> = ({
           <div className="divide-y divide-border border-t border-border">
             <div className="grid grid-cols-2 p-3 text-sm hover:bg-muted/30 transition-colors">
               <span className="font-medium text-muted-foreground">{t("lfPower")}</span>
-              <span className="text-right font-mono font-semibold">{lf.toFixed(2)} ms²</span>
+              <span className="text-right font-mono font-semibold">{lf} ms²</span>
             </div>
             <div className="grid grid-cols-2 p-3 text-sm hover:bg-muted/30 transition-colors">
               <span className="font-medium text-muted-foreground">{t("hfPower")}</span>
-              <span className="text-right font-mono font-semibold">{hf.toFixed(2)} ms²</span>
+              <span className="text-right font-mono font-semibold">{hf} ms²</span>
             </div>
             <div className="grid grid-cols-2 p-3 text-sm hover:bg-muted/30 transition-colors">
               <span className="font-medium text-muted-foreground">{t("lfHfRatio")}</span>

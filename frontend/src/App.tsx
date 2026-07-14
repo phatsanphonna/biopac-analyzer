@@ -21,66 +21,72 @@ function App() {
   const [fileName, setFileName] = useState<string>("");
 
   // File processing handler
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = async (file: File) => {
     setFileName(file.name);
     setIsAnalyzing(true);
     setError(null);
 
-    // Try posting the file to the python backend first
-    const formData = new FormData();
-    formData.append("file", file);
+    try {
+      const compressed = await new Response(
+        file.stream().pipeThrough(new CompressionStream("gzip")),
+      ).blob();
 
-    fetch("/api/analyze", {
-      method: "POST",
-      body: formData,
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Backend response error");
-        }
-        return res.json();
-      })
-      .then((data) => {
-        setResults(data);
+      if (compressed.size > 4_000_000) {
+        setError("The CSV is still too large after compression.");
         setIsAnalyzing(false);
-      })
-      .catch((err) => {
-        console.warn(
-          t("connectionFailed"),
-          err,
-        );
+        return;
+      }
 
-        // Execute client-side fallback
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const text = e.target?.result as string;
-            setTimeout(() => {
-              try {
-                const data = parseCSV(text);
-                const analysisResults = analyzeSignals(data, file.name);
-                setResults(analysisResults);
-                setIsAnalyzing(false);
-              } catch (localErr: any) {
-                console.error(localErr);
-                setError(
-                  localErr.message ||
-                    t("csvError"),
-                );
-                setIsAnalyzing(false);
-              }
-            }, 100);
-          } catch (readErr) {
-            setError(t("readError"));
-            setIsAnalyzing(false);
-          }
-        };
-        reader.onerror = () => {
-          setError(t("fileReadError"));
-          setIsAnalyzing(false);
-        };
-        reader.readAsText(file);
+      const formData = new FormData();
+      formData.append("file", compressed, `${file.name}.gz`);
+
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        body: formData,
       });
+      if (!response.ok) {
+        throw new Error("Backend response error");
+      }
+
+      setResults(await response.json());
+      setIsAnalyzing(false);
+    } catch (err) {
+      console.warn(
+        t("connectionFailed"),
+        err,
+      );
+
+      // Execute client-side fallback
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const text = e.target?.result as string;
+          setTimeout(() => {
+            try {
+              const data = parseCSV(text);
+              const analysisResults = analyzeSignals(data, file.name);
+              setResults(analysisResults);
+              setIsAnalyzing(false);
+            } catch (localErr: any) {
+              console.error(localErr);
+              setError(
+                localErr.message ||
+                  t("csvError"),
+              );
+              setIsAnalyzing(false);
+            }
+          }, 100);
+        } catch (readErr) {
+          setError(t("readError"));
+          setIsAnalyzing(false);
+        }
+      };
+      reader.onerror = () => {
+        setError(t("fileReadError"));
+        setIsAnalyzing(false);
+      };
+      reader.readAsText(file);
+    }
   };
 
   const loadDemoData = () => {
