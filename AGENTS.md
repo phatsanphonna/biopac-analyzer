@@ -1,55 +1,34 @@
-# Developer Agents Directory Rules & Guidelines
+# Desktop Development Guidelines
 
-This document outlines workspace conventions, module definitions, styling policies, and build verification checks for AI agents collaborating on the BIOPAC Physiological Analyzer codebase.
+This repository is a focused, offline PySide6 desktop ECG/HRV analyzer. Do not restore the retired browser or server implementation.
 
----
+## File responsibilities
 
-## 1. Directory Structure & File Responsibilities
+- `analyzer/ecg_hrv_pantompkins_gui.py` is the preserved scientific baseline. Keep it byte-for-byte unchanged unless a task explicitly requests a baseline change.
+- `analyzer/desktop_analysis.py` is the GUI-independent adapter. Keep `METHODS`, `PARAMETERS`, `AnalysisContext`, `AnalysisResult`, `load_recording()`, `analyze_recording()`, and CSV export compatible.
+- `analyzer/desktop_app.py` owns PySide6 widgets and the entry point. Long analysis must stay off the GUI thread; workers communicate with widgets only through signals.
+- `analyzer/test_desktop.py` contains focused loading, method, schema, export, and worker checks.
+- Preserve the tracked sample recording, existing result CSVs, PDFs, and notes.
 
-- **`analyzer/` (Backend Service)**:
-  - **`server.py`**: The primary FastAPI application. It is fully type-annotated (`mypy` compliant) and handles file validation, signal subsampling, and static asset serving. Keep imports clean and type annotations strict.
-  - **`ECG_resp.py`**: ECG-Derived Respiration (EDR) calculations. Contains Welch PSD estimators and bandpass filters. Keep consensus calculations decoupled from router logic.
-  - **`HRV_parameters.py`**: Core research script. It is dynamically loaded by `server.py` using `importlib` spec configurations.
-  - **`RSA.py`**: Respiratory Sinus Arrhythmia calculations.
+## Conventions
 
-- **`frontend/` (Client Interface)**:
-  - **`src/App.tsx`**: Manages state, API execution, and local processing fallbacks. All API queries should target relative endpoints (e.g. `/api/analyze`) rather than hardcoded URLs.
-  - **`src/components/react/`**: Single-responsibility card interfaces:
-    - **`DiagnosticSummary.tsx`**: Renders Time-Domain HRV parameters. Max HR metrics and descriptive headers should not be included.
-    - **`FrequencySummary.tsx`**: Renders Frequency-Domain HRV parameters. Includes the estimated `RESP` frequency in Hz.
-  - **`src/lib/signalProcessor.ts`**: The client-side fallback JavaScript/TypeScript engine. It must mirror backend return schemas exactly to prevent rendering crashes if the Python server is offline.
+- Fully annotate new Python code and prefer specific NumPy/Python types over `Any`.
+- Keep scientific calculations in the adapter or baseline, not in Qt slots.
+- All widget access stays on the main thread. Use the existing QObject/QThread worker pattern for expensive work.
+- Keep input validation at CSV and export boundaries.
+- Do not add dependencies when the standard library, NumPy, pandas, SciPy, NeuroKit2, or PySide6 already covers the need.
+- Exported local reports belong at `analyzer/*_hrv.csv` and must remain untracked.
 
----
+## Required verification
 
-## 2. Coding Conventions
+Run from `analyzer/` before completion:
 
-### Backend (Python)
-- **Typing**: Keep all python functions and variables fully type-annotated. Avoid returning generic `Any` when a specific type (e.g., `np.ndarray`, `Dict[str, float]`) is available.
-- **Dynamic Imports**: Use `importlib.util` for files containing spaces or special characters in their filenames.
-- **Safe Floats**: Always wrap values returned in JSON responses in `safe_float` to sanitize `NaN`/`Inf` float errors before sending them to the client.
+```bash
+uv lock --check
+uv run python -m py_compile ecg_hrv_pantompkins_gui.py desktop_analysis.py desktop_app.py test_desktop.py
+uv run mypy --ignore-missing-imports desktop_analysis.py desktop_app.py
+uv run python -m unittest -v test_desktop.py
+uv run python desktop_app.py --smoke-test
+```
 
-### Frontend (React + TypeScript)
-- **Styling**: Use Vanilla CSS / Tailwind CSS matching existing cards patterns. Do not introduce bloated custom layout libraries.
-- **No Placeholder Components**: Avoid rendering unused charts, navigation bars, or badge icons.
-- **Relative Fetching**: All requests to the backend must use relative paths (e.g. `/api/...`). Vite is configured to proxy local requests from port `5173` to `8000` during development.
-
----
-
-## 3. Verification & Compliance Checks
-
-Before marking any task as complete, you must run and verify:
-
-1. **Backend Syntax Check**:
-   ```bash
-   uv run python -m py_compile server.py
-   ```
-2. **Backend Type Integrity**:
-   ```bash
-   uv run mypy --ignore-missing-imports server.py
-   ```
-   *Mypy must return `Success: no issues found`.*
-3. **Frontend Compilation**:
-   ```bash
-   pnpm --filter frontend build
-   ```
-   *The compilation must run to completion and output assets inside `frontend/dist/` without type errors.*
+For packaging changes, also build with PyInstaller and run the generated executable with `--smoke-test`. Remove local `build/`, `dist/`, and `.spec` output afterward.

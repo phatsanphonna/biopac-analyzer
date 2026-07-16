@@ -1,0 +1,60 @@
+name: Desktop builds
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "analyzer/desktop_*.py"
+      - "analyzer/test_desktop.py"
+      - "analyzer/ecg_hrv_pantompkins_gui.py"
+      - "analyzer/pyproject.toml"
+      - "analyzer/uv.lock"
+      - ".github/workflows/desktop-build.yml"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025
+            artifact: BIOPAC-HRV-Analyzer-windows-x64
+          - os: macos-15
+            artifact: BIOPAC-HRV-Analyzer-macos-arm64
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: analyzer
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync --frozen --all-groups
+      - name: Verify desktop modules
+        run: |
+          uv run --frozen python -m py_compile ecg_hrv_pantompkins_gui.py desktop_analysis.py desktop_app.py test_desktop.py
+          uv run --frozen mypy --ignore-missing-imports desktop_analysis.py desktop_app.py
+          uv run --frozen python -m unittest -v test_desktop.py
+          uv run --frozen python desktop_app.py --smoke-test
+      - name: Build application
+        run: uv run --frozen pyinstaller --noconfirm --clean --onedir --windowed --name BIOPAC-HRV-Analyzer desktop_app.py
+      - name: Smoke test and package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          & dist\BIOPAC-HRV-Analyzer\BIOPAC-HRV-Analyzer.exe --smoke-test
+          Compress-Archive -Path dist\BIOPAC-HRV-Analyzer -DestinationPath dist\${{ matrix.artifact }}.zip
+      - name: Smoke test, sign, and package (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          dist/BIOPAC-HRV-Analyzer.app/Contents/MacOS/BIOPAC-HRV-Analyzer --smoke-test
+          codesign --force --deep --sign - dist/BIOPAC-HRV-Analyzer.app
+          ditto -c -k --sequesterRsrc --keepParent dist/BIOPAC-HRV-Analyzer.app dist/${{ matrix.artifact }}.zip
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: analyzer/dist/${{ matrix.artifact }}.zip
+          archive: false
+          if-no-files-found: error

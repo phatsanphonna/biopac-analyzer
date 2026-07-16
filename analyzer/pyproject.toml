@@ -1,15 +1,18 @@
 [project]
 name = "biopac-analyzer"
 version = "0.1.0"
-description = "A simple web app for BIOPAC signal analysis and Kubios-style report generation"
+description = "Offline PySide6 desktop ECG and HRV analyzer for BIOPAC recordings"
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.24.0",
     "pandas>=2.0.0",
-    "neurokit2>=0.2.7",
     "scipy>=1.10.0",
-    "matplotlib>=3.7.0",
-    "fastapi>=0.100.0",
-    "uvicorn>=0.22.0",
-    "python-multipart>=0.0.6",
+    "neurokit2>=0.2.7",
+    "pyside6>=6.8.0",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.14.0",
+    "pyinstaller>=6.11.0",
 ]

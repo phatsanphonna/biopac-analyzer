@@ -1,29 +1,11 @@
 {
   "version": 1,
   "skills": {
-    "deploy-to-vercel": {
-      "source": "vercel-labs/agent-skills",
+    "pyside6-reviewer": {
+      "source": "akiselev/qt-llm-template",
       "sourceType": "github",
-      "skillPath": "skills/deploy-to-vercel/SKILL.md",
-      "computedHash": "03e0eaaa9bf13ba1e7ffa387f5893de6f324c0868c627001f179395a8feaa7c9"
-    },
-    "fastapi": {
-      "source": "fastapi/fastapi",
-      "sourceType": "github",
-      "skillPath": "fastapi/.agents/skills/fastapi/SKILL.md",
-      "computedHash": "ee23d5285caf055cf164ff45dd34888d381143564666baacab8aa786f22e413a"
-    },
-    "frontend-design": {
-      "source": "anthropics/skills",
-      "sourceType": "github",
-      "skillPath": "skills/frontend-design/SKILL.md",
-      "computedHash": "4eabc66183767153e404b39d1b839b1c37f2d82d86f0a0d7e880a579d8d62336"
-    },
-    "modern-web-guidance": {
-      "source": "googlechrome/modern-web-guidance",
-      "sourceType": "github",
-      "skillPath": "skills/modern-web-guidance/SKILL.md",
-      "computedHash": "9f4a50b16567d3e146014ca1e36cf31d11a9b28468eebdbbbee06ffe3b08dda8"
+      "skillPath": ".claude/skills/qt-code-review/SKILL.md",
+      "computedHash": "f6b411a902ff72aa1223ff110c4615ebd6640c096e4fb4655154c165279644b6"
     },
     "python-design-patterns": {
       "source": "wshobson/agents",
