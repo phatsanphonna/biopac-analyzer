@@ -16,3 +16,4 @@ dist/
 *.egg-info/
 
 analyzer/*_hrv.csv
+analyzer/*_hrv.pdf

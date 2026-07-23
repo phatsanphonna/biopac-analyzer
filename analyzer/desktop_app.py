@@ -42,6 +42,7 @@ from desktop_analysis import (
     load_recording,
     render_metric,
 )
+from desktop_report import export_pdf_report
 
 
 class AnalysisWorker(QObject):
@@ -146,9 +147,12 @@ class MainWindow(QMainWindow):
         actions.addStretch()
         self.export_button = QPushButton("Export CSV…")
         self.export_button.clicked.connect(self.export_csv)
+        self.pdf_button = QPushButton("Export PDF…")
+        self.pdf_button.clicked.connect(self.export_pdf)
         self.another_button = QPushButton("Analyze another file")
         self.another_button.clicked.connect(self.reset)
         actions.addWidget(self.export_button)
+        actions.addWidget(self.pdf_button)
         actions.addWidget(self.another_button)
         self.actions_widget = QWidget()
         self.actions_widget.setLayout(actions)
@@ -249,21 +253,45 @@ class MainWindow(QMainWindow):
     def export_csv(self) -> None:
         if self.result is None:
             return
-        name = self.result.source_path.name
-        if name.lower().endswith(".gz"):
-            name = name[:-3]
-        if name.lower().endswith(".csv"):
-            name = name[:-4]
+        destination = self._default_export_path("csv")
         filename, _ = QFileDialog.getSaveFileName(
             self,
             "Export analysis",
-            str(self.result.source_path.with_name(f"{name}_hrv.csv")),
+            str(destination),
             "CSV files (*.csv)",
         )
         if not filename:
             return
         try:
             export_result(self.result, filename)
+        except ValueError as exc:
+            QMessageBox.critical(self, "Export failed", str(exc))
+            return
+        self.status.setText(f"Exported {filename}")
+
+    def _default_export_path(self, extension: str) -> Path:
+        assert self.result is not None
+        name = self.result.source_path.name
+        if name.lower().endswith(".gz"):
+            name = name[:-3]
+        if name.lower().endswith(".csv"):
+            name = name[:-4]
+        return self.result.source_path.with_name(f"{name}_hrv.{extension}")
+
+    @Slot()
+    def export_pdf(self) -> None:
+        if self.result is None:
+            return
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export PDF report",
+            str(self._default_export_path("pdf")),
+            "PDF files (*.pdf)",
+        )
+        if not filename:
+            return
+        try:
+            export_pdf_report(self.result, filename)
         except ValueError as exc:
             QMessageBox.critical(self, "Export failed", str(exc))
             return

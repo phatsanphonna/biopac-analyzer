@@ -82,6 +82,7 @@ class AnalysisResult:
     sampling_rate: float
     values: Mapping[str, MetricValue]
     warnings: tuple[str, ...] = ()
+    context: AnalysisContext | None = None
 
 
 def _run_method(ecg: FloatArray, sampling_rate: float, method: str) -> tuple[FloatArray, IntArray]:
@@ -348,7 +349,14 @@ def analyze_recording(recording: Recording, method_id: str) -> AnalysisResult:
         warnings.append("Too few valid RR intervals for HRV calculation.")
     elif len(raw_rr) and len(valid_rr) / len(raw_rr) < 0.8:
         warnings.append("More than 20% of RR intervals were removed as artifacts.")
-    return AnalysisResult(recording.path, method_id, recording.sampling_rate, values, tuple(warnings))
+    return AnalysisResult(
+        recording.path,
+        method_id,
+        recording.sampling_rate,
+        values,
+        tuple(warnings),
+        context,
+    )
 
 
 def render_metric(value: MetricValue | None, precision: int) -> str:

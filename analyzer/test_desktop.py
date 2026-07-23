@@ -12,6 +12,7 @@ import numpy as np
 from PySide6.QtCore import QCoreApplication
 
 import desktop_analysis as analysis
+from desktop_report import export_pdf_report
 from desktop_app import AnalysisWorker
 
 
@@ -129,6 +130,7 @@ class MethodTests(unittest.TestCase):
             result = analysis.analyze_recording(recording, "test")
         self.assertEqual(set(analysis.PARAMETERS), set(analysis.legacy.safe_nan_features()))
         self.assertEqual(set(analysis.PARAMETERS), set(result.values))
+        self.assertIsNotNone(result.context)
         self.assertEqual(analysis.render_metric(float("nan"), 2), "—")
         self.assertEqual(analysis.render_metric(float("inf"), 2), "—")
 
@@ -139,6 +141,59 @@ class MethodTests(unittest.TestCase):
         self.assertEqual(row["source_filename"], "source.csv")
         self.assertEqual(row["selected_method"], "test")
         self.assertTrue(set(analysis.PARAMETERS).issubset(row))
+
+
+class ReportTests(unittest.TestCase):
+    def test_pdf_export_with_analysis_context(self) -> None:
+        rr = 0.8 + 0.05 * np.sin(np.linspace(0, 12 * np.pi, 100))
+        times = np.cumsum(rr)
+        context = analysis.AnalysisContext(
+            np.zeros(10_000),
+            np.zeros(10_000),
+            100.0,
+            np.arange(100, 10_000, 100, dtype=np.int64),
+            rr,
+            times,
+            rr,
+            times,
+        )
+        values = dict(analysis.legacy.safe_nan_features())
+        values.update(
+            {
+                "duration_sec": 100.0,
+                "sampling_rate_Hz": 100.0,
+                "r_peak_count": 99,
+                "rr_count_raw": 100,
+                "rr_count_valid": 100,
+                "rr_removed_percent": 0.0,
+                **analysis._time_features(context),
+                **analysis._frequency_features(context),
+                **analysis._nonlinear_features(context),
+            }
+        )
+        result = analysis.AnalysisResult(
+            Path("synthetic.csv"), "pantompkins1985", 100.0, values, context=context
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            destination = export_pdf_report(result, Path(directory) / "report.pdf")
+            data = destination.read_bytes()
+        self.assertTrue(data.startswith(b"%PDF-"))
+        self.assertTrue(data.rstrip().endswith(b"%%EOF"))
+        self.assertGreater(len(data), 10_000)
+
+    def test_pdf_export_handles_missing_and_insufficient_data(self) -> None:
+        result = analysis.AnalysisResult(
+            Path("short.csv"),
+            "unknown",
+            1.0,
+            {"duration_sec": float("nan")},
+            ("Too few valid RR intervals for HRV calculation.",),
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            destination = export_pdf_report(result, Path(directory) / "short.pdf")
+            data = destination.read_bytes()
+        self.assertTrue(data.startswith(b"%PDF-"))
+        self.assertGreater(len(data), 1_000)
 
 
 class WorkerTests(unittest.TestCase):

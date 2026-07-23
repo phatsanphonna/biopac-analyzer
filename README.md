@@ -1,6 +1,6 @@
 # BIOPAC HRV Analyzer
 
-Offline PySide6 desktop software for analyzing ECG recordings exported from BIOPAC as `.csv` or `.csv.gz` files. It supports Pan–Tompkins 1985 and NeuroKit ECG pipelines, displays HRV metrics, and exports one-row CSV reports.
+Offline PySide6 desktop software for analyzing ECG recordings exported from BIOPAC as `.csv` or `.csv.gz` files. It supports Pan–Tompkins 1985 and NeuroKit ECG pipelines, displays HRV metrics, and exports one-row CSV results or one-page PDF summaries.
 
 ## Run
 
@@ -12,11 +12,12 @@ uv sync --all-groups
 uv run python desktop_app.py
 ```
 
-Choose a recording, confirm the detected time/ECG columns and sampling rate, select a method, and analyze. Exported reports default to `analyzer/<recording>_hrv.csv`.
+Choose a recording, confirm the detected time/ECG columns and sampling rate, select a method, and analyze. CSV and PDF exports default to `analyzer/<recording>_hrv.csv` and `analyzer/<recording>_hrv.pdf`.
 
 ## Project layout
 
 - `analyzer/desktop_analysis.py` — GUI-independent loading, analysis, metric registry, and CSV export.
+- `analyzer/desktop_report.py` — one-page Matplotlib PDF report.
 - `analyzer/desktop_app.py` — PySide6 application and background analysis worker.
 - `analyzer/ecg_hrv_pantompkins_gui.py` — preserved scientific baseline; do not modify during desktop maintenance.
 - `analyzer/test_desktop.py` — focused desktop unit tests.
